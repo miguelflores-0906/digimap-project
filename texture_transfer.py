@@ -5,6 +5,7 @@ from skimage import io, util
 from skimage.color import rgb2gray
 from skimage.filters import gaussian
 import heapq
+import time
 
 
 def randomPatch(texture, patchLength):
@@ -290,11 +291,16 @@ def main():
     plt.imshow(rice)
     plt.show()
 
+    start = time.time()
     res2 = transferIter(rice, bill, 20, 2)
+    end = time.time()
     io.imshow(res2)
     io.show()
 
+    res2 = res2.astype(np.uint8)
+
     io.imsave("ricebill2.png", res2)
+    print("Time:", end - start)
 
 if __name__ == "__main__":
     main()
