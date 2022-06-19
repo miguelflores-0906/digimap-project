@@ -1,21 +1,21 @@
 import numpy as np
 import math
 from matplotlib import pyplot as plt
-from skimage import io, util
 from skimage.color import rgb2gray
+from skimage.color.colorconv import gray2rgb, rgba2rgb
 from skimage.filters import gaussian
+from skimage import io, util
 import heapq
 
-
-def randomPatch(texture, patchLength):
+def randomPatch(texture, patchLength): # generates random values that select part of the texture and returns it as a patch
     h, w, _ = texture.shape
-    i = np.random.randint(h - patchLength)
-    j = np.random.randint(w - patchLength)
+    i = np.random.randint(h - patchLength) # set i var (y coord) as a random int
+    j = np.random.randint(w - patchLength) # set j var (x coord) as a random int
 
-    return texture[i:i+patchLength, j:j+patchLength]
+    return texture[i:i+patchLength, j:j+patchLength] # returns a random patch of the texture within range of patchLength
 
 
-def L2OverlapDiff(patch, patchLength, overlap, res, y, x):
+def L2OverlapDiff(patch, patchLength, overlap, res, y, x): # calculates error stitching 
     error = 0
 
     if x > 0:
@@ -25,7 +25,7 @@ def L2OverlapDiff(patch, patchLength, overlap, res, y, x):
     if y > 0:
         up   = patch[:overlap, :] - res[y:y+overlap, x:x+patchLength]
         error += np.sum(up**2)
-
+ 
     if x > 0 and y > 0:
         corner = patch[:overlap, :overlap] - res[y:y+overlap, x:x+overlap]
         error -= np.sum(corner**2)
@@ -33,22 +33,22 @@ def L2OverlapDiff(patch, patchLength, overlap, res, y, x):
     return error
  
 
-def randomBestPatch(texture, patchLength, overlap, res, y, x):
+def randomBestPatch(texture, patchLength, overlap, res, y, x): 
     h, w, _ = texture.shape
-    errors = np.zeros((h - patchLength, w - patchLength))
+    errors = np.zeros((h - patchLength, w - patchLength)) # errors var set as the size for stitched block boundary set by L2OverlapDiff
 
     for i in range(h - patchLength):
         for j in range(w - patchLength):
             patch = texture[i:i+patchLength, j:j+patchLength]
-            e = L2OverlapDiff(patch, patchLength, overlap, res, y, x)
-            errors[i, j] = e
+            e = L2OverlapDiff(patch, patchLength, overlap, res, y, x) # set e as an error of a certain boundary between two blocks
+            errors[i, j] = e # populate errors var with calculated error for overlapping boundaries
 
-    i, j = np.unravel_index(np.argmin(errors), errors.shape)
+    i, j = np.unravel_index(np.argmin(errors), errors.shape) # sets i and j with coordinates based on the minimum error values in errors
     return texture[i:i+patchLength, j:j+patchLength]
 
 
 
-def minCutPath(errors):
+def minCutPath(errors): #determines minimum error stitching path 
     # dijkstra's algorithm vertical
     pq = [(error, [i]) for i, error in enumerate(errors[0])]
     heapq.heapify(pq)
@@ -123,10 +123,10 @@ def minCutPatch(patch, patchLength, overlap, res, y, x):
     return patch
 
 
-def quilt(texture, patchLength, numPatches, mode="cut", sequence=False):
+def quilt(texture, patchLength, numPatches, mode="cut", sequence=False): 
     texture = util.img_as_float(texture)
 
-    overlap = patchLength // 6
+    overlap = patchLength // 6 
     numPatchesHigh, numPatchesWide = numPatches
 
     h = (numPatchesHigh * patchLength) - (numPatchesHigh - 1) * overlap
@@ -134,12 +134,12 @@ def quilt(texture, patchLength, numPatches, mode="cut", sequence=False):
 
     res = np.zeros((h, w, texture.shape[2]))
 
-    for i in range(numPatchesHigh):
-        for j in range(numPatchesWide):
-            y = i * (patchLength - overlap)
-            x = j * (patchLength - overlap)
+    for i in range(numPatchesHigh): #iterates through height of the entire img to be generated  
+        for j in range(numPatchesWide):  # ^^ width 
+            y = i * (patchLength - overlap)  #locates y coords of each patch
+            x = j * (patchLength - overlap)  #locates x coords of each patch
 
-            if i == 0 and j == 0 or mode == "random":
+            if i == 0 and j == 0 or mode == "random":   # conditionals to check which approach to use based on specified mode
                 patch = randomPatch(texture, patchLength)
             elif mode == "best":
                 patch = randomBestPatch(texture, patchLength, overlap, res, y, x)
@@ -147,7 +147,7 @@ def quilt(texture, patchLength, numPatches, mode="cut", sequence=False):
                 patch = randomBestPatch(texture, patchLength, overlap, res, y, x)
                 patch = minCutPatch(patch, patchLength, overlap, res, y, x)
             
-            res[y:y+patchLength, x:x+patchLength] = patch
+            res[y:y+patchLength, x:x+patchLength] = patch # assigns patch generated to res 2D array
 
             if sequence:
                 io.imshow(res)
@@ -165,6 +165,22 @@ def quiltSize(texture, patchLength, shape, mode="cut"):
     res = quilt(texture, patchLength, (numPatchesHigh, numPatchesWide), mode)
 
     return res[:h, :w]
+
+# texture = io.imread("test.png")
+# io.imshow(texture)
+# io.show()
+
+# io.imshow(quilt(texture, 25, (6, 6), "random"))
+# io.show()
+
+# io.imshow(quilt(texture, 25, (6, 6), "best"))
+# io.show()
+
+# io.imshow(quilt(texture, 20, (6, 6), "cut"))
+# io.show()
+
+# io.imshow(quilt(texture, 20, (3, 3), "cut", True))
+# io.show()
 
 def bestCorrPatch(texture, corrTexture, patchLength, corrTarget, y, x):
     h, w, _ = texture.shape
@@ -213,6 +229,7 @@ def bestCorrOverlapPatch(texture, corrTexture, patchLength, overlap,
 
 def transfer(texture, target, patchLength, mode="cut", 
              alpha=0.1, level=0, prior=None, blur=False):
+
     corrTexture = rgb2gray(texture)
     corrTarget  = rgb2gray(target)
 
@@ -277,10 +294,9 @@ def Loss_function(original, syn):
       loss3 += np.sqrt(np.sum(np.square(original[i][:,0:3]/np.max(original) - syn[i]/np.max(syn))))
 
 def main():
-    s = "https://people.eecs.berkeley.edu/~efros/research/quilting/figs/transfer/"
 
-    bill = io.imread(s + "bill-big.jpg")
-    rice = io.imread(s + "rice.gif")
+    bill = io.imread("bill-big.jpg")
+    rice = io.imread("rice.gif")
 
     print(bill.shape)
     plt.imshow(bill)
