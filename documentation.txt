@@ -1,0 +1,45 @@
+Quilt Documentation:
+
+globally common vars
+	res - the full img quilted with multiple patches of texture 
+
+
+def quilt 
+
+	texture = image to be processed 	
+	patch length = user input var
+	numPatches = dimension of overall image to be quilted, number of patches of the texture var (numPatches[0] x numPatches[1])
+	overlap = var that helps determine where the next generated patch should start
+	res = array holder for properties of the img to be built 
+
+~converts img to float matrix
+~initializes dimensions of img to be generated through quilting 
+~takes an approach parameter to be used for the image to be generated 
+~calls the randomPatch, randomBestPatch, and minCutPatch
+
+def randomPatch
+
+	i = y coordinate of the texture
+	j = x coordinate of the texture
+
+~generates random values that select part of the texture and returns it as a patch
+
+
+def randomBestPatch
+	
+	errors = array with list of calculated errors for a specific boundary 
+
+~half of the minimum error stitching equation
+~calls L2OverlapDiff to calculate for the error of each side of the patch
+~generates patches based on minimum error stitching with a cut path 
+
+def L2OverlapDiff 
+
+	error = calculated error for a specific coordinate in a patch
+
+~other half of the minimum error stitching equation
+~calculates errors for randomBestPatch
+
+def minCutPath 
+
+~vertical implementation of dijkstra's algorithm 
