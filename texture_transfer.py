@@ -308,6 +308,7 @@ def Loss_function(original, syn):
   for i in range(height):
       loss3 += np.sqrt(np.sum(np.square(original[i][:,0:3]/np.max(original) - syn[i]/np.max(syn))))
 
+@jit
 def main():
 
     bill = io.imread("bill-big.jpg")
