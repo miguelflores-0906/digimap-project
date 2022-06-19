@@ -7,7 +7,9 @@ from skimage.filters import gaussian
 from skimage import io, util
 import heapq
 import time
+from numba import jit
 
+@jit
 def randomPatch(texture, patchLength): # generates random values that select part of the texture and returns it as a patch
     h, w, _ = texture.shape
     i = np.random.randint(h - patchLength) # set i var (y coord) as a random int
@@ -16,6 +18,7 @@ def randomPatch(texture, patchLength): # generates random values that select par
     return texture[i:i+patchLength, j:j+patchLength] # returns a random patch of the texture within range of patchLength
 
 
+@jit
 def L2OverlapDiff(patch, patchLength, overlap, res, y, x): # calculates error stitching 
     error = 0
 
@@ -34,6 +37,7 @@ def L2OverlapDiff(patch, patchLength, overlap, res, y, x): # calculates error st
     return error
  
 
+@jit
 def randomBestPatch(texture, patchLength, overlap, res, y, x): 
     h, w, _ = texture.shape
     errors = np.zeros((h - patchLength, w - patchLength)) # errors var set as the size for stitched block boundary set by L2OverlapDiff
@@ -49,6 +53,7 @@ def randomBestPatch(texture, patchLength, overlap, res, y, x):
 
 
 
+@jit
 def minCutPath(errors): #determines minimum error stitching path 
     # dijkstra's algorithm vertical
     pq = [(error, [i]) for i, error in enumerate(errors[0])]
@@ -75,6 +80,7 @@ def minCutPath(errors): #determines minimum error stitching path
                     seen.add((curDepth, nextIndex))
 
 
+@jit
 def minCutPath2(errors):
     # dynamic programming, unused
     errors = np.pad(errors, [(0, 0), (1, 1)], 
@@ -102,6 +108,7 @@ def minCutPath2(errors):
     return map(lambda x: x - 1, reversed(minCutPath))
 
 
+@jit
 def minCutPatch(patch, patchLength, overlap, res, y, x):
     patch = patch.copy()
     dy, dx, _ = patch.shape
@@ -124,6 +131,7 @@ def minCutPatch(patch, patchLength, overlap, res, y, x):
     return patch
 
 
+@jit
 def quilt(texture, patchLength, numPatches, mode="cut", sequence=False): 
     texture = util.img_as_float(texture)
 
@@ -157,6 +165,7 @@ def quilt(texture, patchLength, numPatches, mode="cut", sequence=False):
     return res
 
 
+@jit
 def quiltSize(texture, patchLength, shape, mode="cut"):
     overlap = patchLength // 6
     h, w = shape
@@ -183,6 +192,7 @@ def quiltSize(texture, patchLength, shape, mode="cut"):
 # io.imshow(quilt(texture, 20, (3, 3), "cut", True))
 # io.show()
 
+@jit
 def bestCorrPatch(texture, corrTexture, patchLength, corrTarget, y, x):
     h, w, _ = texture.shape
     errors = np.zeros((h - patchLength, w - patchLength))
@@ -199,6 +209,7 @@ def bestCorrPatch(texture, corrTexture, patchLength, corrTarget, y, x):
     i, j = np.unravel_index(np.argmin(errors), errors.shape)
     return texture[i:i+curPatchHeight, j:j+curPatchWidth]
 
+@jit
 def bestCorrOverlapPatch(texture, corrTexture, patchLength, overlap, 
                          corrTarget, res, y, x, alpha=0.1, level=0):
     h, w, _ = texture.shape
@@ -228,6 +239,7 @@ def bestCorrOverlapPatch(texture, corrTexture, patchLength, overlap,
 
 
 
+@jit
 def transfer(texture, target, patchLength, mode="cut", 
              alpha=0.1, level=0, prior=None, blur=False):
 
@@ -278,6 +290,7 @@ def transfer(texture, target, patchLength, mode="cut",
       
     return res
 
+@jit
 def transferIter(texture, target, patchLength, n):
     res = transfer(texture, target, patchLength)
     for i in range(1, n):
@@ -289,6 +302,7 @@ def transferIter(texture, target, patchLength, n):
     
     return res
 
+@jit
 def Loss_function(original, syn):
   height, width, depth = original.shape
   for i in range(height):
