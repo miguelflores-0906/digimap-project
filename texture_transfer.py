@@ -311,7 +311,7 @@ def Loss_function(original, syn):
 @jit
 def main():
 
-    bill = io.imread("bill-big.jpg")
+    bill = io.imread("unknown.png")
     rice = io.imread("rice.gif")
 
     print(bill.shape)
@@ -330,7 +330,7 @@ def main():
 
     res2 = res2.astype(np.uint8)
 
-    io.imsave("ricebill2.png", res2)
+    io.imsave("riceshiggy.png", res2)
     print("Time:", end - start)
 
 if __name__ == "__main__":
