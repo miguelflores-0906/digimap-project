@@ -19,7 +19,7 @@ def randomPatch(texture, patchLength): # generates random values that select par
 
 
 @jit
-def L2OverlapDiff(patch, patchLength, overlap, res, y, x): # calculates error stitching 
+def L2OverlapDiff(patch, patchLength, overlap, res, y, x): # calculates patch overlap
     error = 0
 
     if x > 0:
@@ -243,7 +243,8 @@ def bestCorrOverlapPatch(texture, corrTexture, patchLength, overlap,
 def transfer(texture, target, patchLength, mode="cut", 
              alpha=0.1, level=0, prior=None, blur=False):
 
-    corrTexture = rgb2gray(texture)
+    # transform texture and target images to grayscale 
+    corrTexture = rgb2gray(texture) 
     corrTarget  = rgb2gray(target)
 
     if blur:
@@ -259,9 +260,10 @@ def transfer(texture, target, patchLength, mode="cut",
     texture = util.img_as_float(texture)[:,:,:3]
     target = util.img_as_float(target)[:,:,:3]
 
-    h, w, _ = target.shape
-    overlap = patchLength // 6
+    h, w, _ = target.shape #get target image height and width
+    overlap = patchLength // 6 
 
+    # divide target image's h and w dimensions for number of patches 
     numPatchesHigh = math.ceil((h - patchLength) / (patchLength - overlap)) + 1 or 1
     numPatchesWide = math.ceil((w - patchLength) / (patchLength - overlap)) + 1 or 1
     
@@ -272,7 +274,7 @@ def transfer(texture, target, patchLength, mode="cut",
 
     for i in range(numPatchesHigh):
         for j in range(numPatchesWide):
-            y = i * (patchLength - overlap)
+            y = i * (patchLength - overlap) # i * (20 - 3)  
             x = j * (patchLength - overlap)
 
             if i == 0 and j == 0 or mode == "best":
@@ -291,14 +293,14 @@ def transfer(texture, target, patchLength, mode="cut",
     return res
 
 @jit
-def transferIter(texture, target, patchLength, n):
-    res = transfer(texture, target, patchLength)
+def transferIter(texture, target, patchLength, n): # iterates transfer n times, manipulating transfer() parameters
+    res = transfer(texture, target, patchLength) 
     for i in range(1, n):
-        alpha = 0.1 + 0.8 * i / (n - 1)
-        patchLength = patchLength * 2**i // 3**i
-        print((alpha, patchLength))
+        alpha = 0.1 + 0.8 * i / (n - 1) # switches alpha values every iteration (between 1 and 2)
+        patchLength = patchLength * 2**i // 3**i # increases patchLength after each iteration
+        print((alpha, patchLength)) 
         res = transfer(texture, target, patchLength, 
-                       alpha=alpha, level=i, prior=res)
+                       alpha=alpha, level=i, prior=res) # apply new values to new transfer() call
     
     return res
 
