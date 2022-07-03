@@ -8,6 +8,7 @@ from skimage import io, util
 import heapq
 import time
 from numba import jit
+import gradio as gr
 
 @jit
 def randomPatch(texture, patchLength): # generates random values that select part of the texture and returns it as a patch
@@ -311,29 +312,34 @@ def Loss_function(original, syn):
       loss3 += np.sqrt(np.sum(np.square(original[i][:,0:3]/np.max(original) - syn[i]/np.max(syn))))
 
 @jit
+def style_transfer_main(texture, target):
+    # bill = io.imread("unknown.png")
+    # rice = io.imread("rice.gif")
+
+    # print(bill.shape)
+    # plt.imshow(bill)
+    # plt.show()
+
+    # print(rice.shape)
+    # plt.imshow(rice)
+    # plt.show()
+
+    # start = time.time()
+    # res2 = transferIter(rice, bill, 20, 2)
+    res2 = transferIter(texture, target, 20, 2)
+    # end = time.time()
+    # io.imshow(res2)
+    # io.show()
+
+    # res2 = res2.astype(np.uint8)
+
+    # io.imsave("riceshiggy.png", res2)
+    # print("Time:", end - start)
+    return res2
+
+@jit
 def main():
-
-    bill = io.imread("unknown.png")
-    rice = io.imread("rice.gif")
-
-    print(bill.shape)
-    plt.imshow(bill)
-    plt.show()
-
-    print(rice.shape)
-    plt.imshow(rice)
-    plt.show()
-
-    start = time.time()
-    res2 = transferIter(rice, bill, 20, 2)
-    end = time.time()
-    io.imshow(res2)
-    io.show()
-
-    res2 = res2.astype(np.uint8)
-
-    io.imsave("riceshiggy.png", res2)
-    print("Time:", end - start)
+    interface = gr.Interface()
 
 if __name__ == "__main__":
     main()
