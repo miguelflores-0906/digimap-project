@@ -339,7 +339,7 @@ def style_transfer_main(texture, target):
 
 @jit
 def main():
-    interface = gr.Interface()
+    interface = gr.Interface(fn=style_transfer_main, inputs=['image', 'image'], outputs="image")
 
 if __name__ == "__main__":
     main()
