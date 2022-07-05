@@ -3,7 +3,7 @@ import math
 from matplotlib import pyplot as plt
 from skimage.color import rgb2gray
 from skimage.color.colorconv import gray2rgb, rgba2rgb
-from skimage.filters import gaussian
+from skimage.filters import gaussian, roberts, sobel
 from skimage import io, util
 import heapq
 import time
@@ -247,10 +247,14 @@ def transfer(texture, target, patchLength, mode="cut",
     # transform texture and target images to grayscale 
     corrTexture = rgb2gray(texture) 
     corrTarget  = rgb2gray(target)
+    corrTexture2 = roberts(corrTexture)
+    corrTarget2 = roberts(corrTarget)
 
     if blur:
         corrTexture = gaussian(corrTexture, sigma=3)
         corrTarget  = gaussian(corrTarget,  sigma=3)
+        corrTexture2 = gaussian(corrTexture2, sigma=3)
+        corrTarget2  = gaussian(corrTarget2,  sigma=3)
 
     # io.imshow(corrTexture)
     # io.show()
@@ -286,6 +290,9 @@ def transfer(texture, target, patchLength, mode="cut",
             elif mode == "cut":
                 patch = bestCorrOverlapPatch(texture, corrTexture, patchLength, 
                                              overlap, corrTarget, res, y, x, 
+                                             alpha, level)
+                patch = bestCorrOverlapPatch(texture, corrTexture2, patchLength, 
+                                             overlap, corrTarget2, res, y, x, 
                                              alpha, level)
                 patch = minCutPatch(patch, patchLength, overlap, res, y, x)
             
