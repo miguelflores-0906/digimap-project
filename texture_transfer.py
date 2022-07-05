@@ -246,10 +246,10 @@ def transfer(texture, target, patchLength, mode="cut",
 
     # transform texture and target images to grayscale 
     corrTexture = rgb2gray(texture) 
-    corrTarget  = rgb2gray(target)
+   #corrTarget  = rgb2gray(target)
 
-    sobelX = cv2.Sobel(corrTarget, cv2.CV_64F, 1, 0)
-    sobelY = cv2.Sobel(corrTarget, cv2.CV_64F, 0, 1)
+    sobelX = cv2.Sobel(target, cv2.CV_64F, 1, 0)
+    sobelY = cv2.Sobel(target, cv2.CV_64F, 0, 1)
 
     sobelX = np.uint8(np.absolute(sobelX))
     sobelY = np.uint8(np.absolute(sobelY))
@@ -258,7 +258,7 @@ def transfer(texture, target, patchLength, mode="cut",
 
     if blur:
         corrTexture = gaussian(corrTexture, sigma=3)
-        corrTarget  = gaussian(corrTarget,  sigma=3)
+        #corrTarget  = gaussian(corrTarget,  sigma=3)
 
     io.imshow(corrTexture)
     io.show()
@@ -322,7 +322,7 @@ def Loss_function(original, syn):
 @jit
 def main():
 
-    bill = io.imread("unknown.png")
+    bill = cv2.imread("unknown.png", cv2.IMREAD_GRAYSCALE)
     rice = io.imread("rice.gif")
 
     print(bill.shape)
