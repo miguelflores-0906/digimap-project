@@ -322,7 +322,7 @@ def Loss_function(original, syn):
 @jit
 def main():
 
-    bill = cv2.imread("unknown.png", cv2.IMREAD_GRAYSCALE)
+    bill = io.imread("unknown.png", io.IMREAD_GRAYSCALE)
     rice = io.imread("rice.gif")
 
     print(bill.shape)
