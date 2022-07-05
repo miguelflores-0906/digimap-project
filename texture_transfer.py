@@ -4,11 +4,12 @@ from matplotlib import pyplot as plt
 from skimage.color import rgb2gray
 from skimage.color.colorconv import gray2rgb, rgba2rgb
 from skimage.filters import gaussian
-from skimage import io, util
+from skimage import io, util, filters
 import heapq
 import time
 from numba import jit
 import cv2
+import gradio as gr
 
 @jit
 def randomPatch(texture, patchLength): # generates random values that select part of the texture and returns it as a patch
@@ -246,19 +247,22 @@ def transfer(texture, target, patchLength, mode="cut",
 
     # transform texture and target images to grayscale 
     corrTexture = rgb2gray(texture) 
-   #corrTarget  = rgb2gray(target)
+    corrTarget  = rgb2gray(target)
 
-    sobelX = cv2.Sobel(target, cv2.CV_64F, 1, 0)
-    sobelY = cv2.Sobel(target, cv2.CV_64F, 0, 1)
+    # sobelX = cv2.Sobel(target, cv2.CV_64F, 1, 0)
+    # sobelY = cv2.Sobel(target, cv2.CV_64F, 0, 1)
 
-    sobelX = np.uint8(np.absolute(sobelX))
-    sobelY = np.uint8(np.absolute(sobelY))
+    # sobelX = np.uint8(np.absolute(sobelX))
+    # sobelY = np.uint8(np.absolute(sobelY))
 
-    corrTarget = cv2.bitwise_or(sobelX, sobelY) 
+    sobelX = filters.sobel_h(corrTarget)
+    sobelY = filters.sobel_v(corrTarget)
+
+    corrTarget = sobelX * sobelY
 
     if blur:
         corrTexture = gaussian(corrTexture, sigma=3)
-        #corrTarget  = gaussian(corrTarget,  sigma=3)
+        corrTarget  = gaussian(corrTarget,  sigma=3)
 
     io.imshow(corrTexture)
     io.show()
@@ -319,30 +323,14 @@ def Loss_function(original, syn):
   for i in range(height):
       loss3 += np.sqrt(np.sum(np.square(original[i][:,0:3]/np.max(original) - syn[i]/np.max(syn))))
 
+def style_transfer(texture, target):
+    res2 = transferIter(texture, target, 20, 2)
+    return ("Please come back after a few minutes, the image should appear below",res2)
+
 @jit
 def main():
-
-    bill = io.imread("unknown.png", io.IMREAD_GRAYSCALE)
-    rice = io.imread("rice.gif")
-
-    print(bill.shape)
-    plt.imshow(bill)
-    plt.show()
-
-    print(rice.shape)
-    plt.imshow(rice)
-    plt.show()
-
-    start = time.time()
-    res2 = transferIter(rice, bill, 20, 2)
-    end = time.time()
-    io.imshow(res2)
-    io.show()
-
-    res2 = res2.astype(np.uint8)
-
-    io.imsave("riceshiggy.png", res2)
-    print("Time:", end - start)
+    interface = gr.Interface(fn=style_transfer, inputs=['image', 'image'], outputs=["text","image"])
+    interface.launch()
 
 if __name__ == "__main__":
     main()
