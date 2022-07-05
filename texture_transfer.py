@@ -159,9 +159,9 @@ def quilt(texture, patchLength, numPatches, mode="cut", sequence=False):
             
             res[y:y+patchLength, x:x+patchLength] = patch # assigns patch generated to res 2D array
 
-            if sequence:
-                io.imshow(res)
-                io.show()
+            # if sequence:
+                # io.imshow(res)
+                # io.show()
       
     return res
 
@@ -252,10 +252,10 @@ def transfer(texture, target, patchLength, mode="cut",
         corrTexture = gaussian(corrTexture, sigma=3)
         corrTarget  = gaussian(corrTarget,  sigma=3)
 
-    io.imshow(corrTexture)
-    io.show()
-    io.imshow(corrTarget)
-    io.show()
+    # io.imshow(corrTexture)
+    # io.show()
+    # io.imshow(corrTarget)
+    # io.show()
 
     # remove alpha channel
     texture = util.img_as_float(texture)[:,:,:3]
@@ -311,8 +311,7 @@ def Loss_function(original, syn):
   for i in range(height):
       loss3 += np.sqrt(np.sum(np.square(original[i][:,0:3]/np.max(original) - syn[i]/np.max(syn))))
 
-@jit
-def style_transfer_main(texture, target):
+def style_transfer(texture, target):
     # bill = io.imread("unknown.png")
     # rice = io.imread("rice.gif")
 
@@ -335,11 +334,12 @@ def style_transfer_main(texture, target):
 
     # io.imsave("riceshiggy.png", res2)
     # print("Time:", end - start)
-    return res2
+    return ("Please come back after a few minutes, the image should appear below",res2)
 
 @jit
 def main():
-    interface = gr.Interface(fn=style_transfer_main, inputs=['image', 'image'], outputs="image")
+    interface = gr.Interface(fn=style_transfer, inputs=['image', 'image'], outputs=["text","image"])
+    interface.launch()
 
 if __name__ == "__main__":
     main()
