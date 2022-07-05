@@ -312,28 +312,7 @@ def Loss_function(original, syn):
       loss3 += np.sqrt(np.sum(np.square(original[i][:,0:3]/np.max(original) - syn[i]/np.max(syn))))
 
 def style_transfer(texture, target):
-    # bill = io.imread("unknown.png")
-    # rice = io.imread("rice.gif")
-
-    # print(bill.shape)
-    # plt.imshow(bill)
-    # plt.show()
-
-    # print(rice.shape)
-    # plt.imshow(rice)
-    # plt.show()
-
-    # start = time.time()
-    # res2 = transferIter(rice, bill, 20, 2)
     res2 = transferIter(texture, target, 20, 2)
-    # end = time.time()
-    # io.imshow(res2)
-    # io.show()
-
-    # res2 = res2.astype(np.uint8)
-
-    # io.imsave("riceshiggy.png", res2)
-    # print("Time:", end - start)
     return ("Please come back after a few minutes, the image should appear below",res2)
 
 @jit
