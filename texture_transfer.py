@@ -8,6 +8,7 @@ from skimage import io, util
 import heapq
 import time
 from numba import jit
+import cv2
 
 @jit
 def randomPatch(texture, patchLength): # generates random values that select part of the texture and returns it as a patch
@@ -246,6 +247,14 @@ def transfer(texture, target, patchLength, mode="cut",
     # transform texture and target images to grayscale 
     corrTexture = rgb2gray(texture) 
     corrTarget  = rgb2gray(target)
+
+    sobelX = cv2.Sobel(corrTarget, cv2.CV_64F, 1, 0)
+    sobelY = cv2.Sobel(corrTarget, cv2.CV_64F, 0, 1)
+
+    sobelX = np.uint8(np.absolute(sobelX))
+    sobelY = np.uint8(np.absolute(sobelY))
+
+    corrTarget = cv2.bitwise_or(sobelX, sobelY) 
 
     if blur:
         corrTexture = gaussian(corrTexture, sigma=3)
