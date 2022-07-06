@@ -211,7 +211,7 @@ def bestCorrPatch(texture, corrTexture, patchLength, corrTarget, y, x):
     return texture[i:i+curPatchHeight, j:j+curPatchWidth]
 
 @jit
-def bestCorrOverlapPatch(texture, corrTexture, patchLength, overlap, 
+def bestCorrOverlapPatch(corrTexture2, corrTarget2, texture, corrTexture, patchLength, overlap, 
                          corrTarget, res, y, x, alpha=0.1, level=0):
     h, w, _ = texture.shape
     errors = np.zeros((h - patchLength, w - patchLength))
@@ -234,11 +234,39 @@ def bestCorrOverlapPatch(texture, corrTexture, patchLength, overlap,
                 prevError = np.sum(prevError**2)
             
             errors[i, j] = alpha * (overlapError + prevError) + (1 - alpha) * corrError
+            errors[i, j] += bestGradientOverlapPatch(corrTexture2, corrTarget2, texture, corrTexture, patchLength, 
+                                             overlap, corrTarget, res, y, x, 
+                                             alpha, level)
 
     i, j = np.unravel_index(np.argmin(errors), errors.shape)
     return texture[i:i+di, j:j+dj]
 
+@jit
+def bestGradientOverlapPatch(texture, corrTexture2, patchLength, overlap, 
+                         corrTarget2, res, y, x, alpha=0.1, level=0):
+    h, w, _ = texture.shape
+    errors = np.zeros((h - patchLength, w - patchLength))
 
+    corrTargetPatch = corrTarget2[y:y+patchLength, x:x+patchLength]
+    di, dj = corrTargetPatch.shape
+
+    for i in range(h - patchLength):
+        for j in range(w - patchLength):
+            patch = texture[i:i+di, j:j+dj]
+            l2error = L2OverlapDiff(patch, patchLength, overlap, res, y, x)
+            overlapError = np.sum(l2error)
+
+            corrTexturePatch = corrTexture2[i:i+di, j:j+dj]
+            corrError = np.sum((corrTexturePatch - corrTargetPatch)**2)
+
+            prevError = 0
+            if level > 0:
+                prevError = patch[overlap:, overlap:] - res[y+overlap:y+patchLength, x+overlap:x+patchLength]
+                prevError = np.sum(prevError**2)
+            
+            errors[i, j] = alpha * (overlapError + prevError) + (1 - alpha) * corrError
+
+    return errors[i, j]
 
 @jit
 def transfer(texture, target, patchLength, mode="cut", 
@@ -288,11 +316,8 @@ def transfer(texture, target, patchLength, mode="cut",
                 patch = bestCorrOverlapPatch(texture, corrTexture, patchLength, 
                                              overlap, corrTarget, res, y, x)
             elif mode == "cut":
-                patch = bestCorrOverlapPatch(texture, corrTexture, patchLength, 
+                patch = bestCorrOverlapPatch(corrTexture2, corrTarget2, texture, corrTexture, patchLength, 
                                              overlap, corrTarget, res, y, x, 
-                                             alpha, level)
-                patch = bestCorrOverlapPatch(texture, corrTexture2, patchLength, 
-                                             overlap, corrTarget2, res, y, x, 
                                              alpha, level)
                 patch = minCutPatch(patch, patchLength, overlap, res, y, x)
             
