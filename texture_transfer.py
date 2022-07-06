@@ -3,7 +3,7 @@ import math
 from matplotlib import pyplot as plt
 from skimage.color import rgb2gray
 from skimage.color.colorconv import gray2rgb, rgba2rgb
-from skimage.filters import gaussian, roberts, sobel
+from skimage.filters import gaussian
 from skimage import io, util
 import heapq
 import time
@@ -211,7 +211,7 @@ def bestCorrPatch(texture, corrTexture, patchLength, corrTarget, y, x):
     return texture[i:i+curPatchHeight, j:j+curPatchWidth]
 
 @jit
-def bestCorrOverlapPatch(corrTexture2, corrTarget2, texture, corrTexture, patchLength, overlap, 
+def bestCorrOverlapPatch(texture, corrTexture, patchLength, overlap, 
                          corrTarget, res, y, x, alpha=0.1, level=0):
     h, w, _ = texture.shape
     errors = np.zeros((h - patchLength, w - patchLength))
@@ -234,39 +234,11 @@ def bestCorrOverlapPatch(corrTexture2, corrTarget2, texture, corrTexture, patchL
                 prevError = np.sum(prevError**2)
             
             errors[i, j] = alpha * (overlapError + prevError) + (1 - alpha) * corrError
-            errors[i, j] += bestGradientOverlapPatch(texture, corrTexture2, patchLength, 
-                                             overlap, corrTarget2, res, y, x, 
-                                             alpha, level)
 
     i, j = np.unravel_index(np.argmin(errors), errors.shape)
     return texture[i:i+di, j:j+dj]
 
-@jit
-def bestGradientOverlapPatch(texture, corrTexture2, patchLength, overlap, 
-                         corrTarget2, res, y, x, alpha=0.1, level=0):
-    h, w, _ = texture.shape
-    errors = np.zeros((h - patchLength, w - patchLength))
 
-    corrTargetPatch = corrTarget2[y:y+patchLength, x:x+patchLength]
-    di, dj = corrTargetPatch.shape
-
-    for i in range(h - patchLength):
-        for j in range(w - patchLength):
-            patch = texture[i:i+di, j:j+dj]
-            l2error = L2OverlapDiff(patch, patchLength, overlap, res, y, x)
-            overlapError = np.sum(l2error)
-
-            corrTexturePatch = corrTexture2[i:i+di, j:j+dj]
-            corrError = np.sum((corrTexturePatch - corrTargetPatch)**2)
-
-            prevError = 0
-            if level > 0:
-                prevError = patch[overlap:, overlap:] - res[y+overlap:y+patchLength, x+overlap:x+patchLength]
-                prevError = np.sum(prevError**2)
-            
-            errors[i, j] = alpha * (overlapError + prevError) + (1 - alpha) * corrError
-
-    return errors[i, j]
 
 @jit
 def transfer(texture, target, patchLength, mode="cut", 
@@ -275,14 +247,10 @@ def transfer(texture, target, patchLength, mode="cut",
     # transform texture and target images to grayscale 
     corrTexture = rgb2gray(texture) 
     corrTarget  = rgb2gray(target)
-    corrTexture2 = roberts(corrTexture)
-    corrTarget2 = roberts(corrTarget)
 
     if blur:
         corrTexture = gaussian(corrTexture, sigma=3)
         corrTarget  = gaussian(corrTarget,  sigma=3)
-        corrTexture2 = gaussian(corrTexture2, sigma=3)
-        corrTarget2  = gaussian(corrTarget2,  sigma=3)
 
     # io.imshow(corrTexture)
     # io.show()
@@ -316,7 +284,7 @@ def transfer(texture, target, patchLength, mode="cut",
                 patch = bestCorrOverlapPatch(texture, corrTexture, patchLength, 
                                              overlap, corrTarget, res, y, x)
             elif mode == "cut":
-                patch = bestCorrOverlapPatch(corrTexture2, corrTarget2, texture, corrTexture, patchLength, 
+                patch = bestCorrOverlapPatch(texture, corrTexture, patchLength, 
                                              overlap, corrTarget, res, y, x, 
                                              alpha, level)
                 patch = minCutPatch(patch, patchLength, overlap, res, y, x)
