@@ -321,7 +321,7 @@ def main():
     pageTitle = 'Texture Transfer through Image Quilting'
     msgWarning = 'Image currently processing Please Wait. Limit images from 10 to 200 kb for better results'
     sliderText = "Patch Size (Lower-better quality,longer runtime) (Higher-lower quality,shorter runtime)"
-    desc = "Recommended Texture/Target Files https://people.eecs.berkeley.edu/~efros/research/quilting/results.html https://people.eecs.berkeley.edu/~efros/research/quilting/results3.html"
+    desc = "Recommended Texture/Target Files https://people.eecs.berkeley.edu/~efros/research/quilting/results.html"
     interface = gr.Interface(fn=style_transfer,inputs=[gr.Image(source = "upload", label = "Texture"), gr.Image(source = "upload", label = "Target"), gr.inputs.Slider(20,50,label= sliderText,step=5)], outputs=["image","image"], article= msgWarning, title=pageTitle, description = desc)
     interface.launch()
 
