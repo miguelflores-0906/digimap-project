@@ -234,8 +234,8 @@ def bestCorrOverlapPatch(corrTexture2, corrTarget2, texture, corrTexture, patchL
                 prevError = np.sum(prevError**2)
             
             errors[i, j] = alpha * (overlapError + prevError) + (1 - alpha) * corrError
-            errors[i, j] += bestGradientOverlapPatch(corrTexture2, corrTarget2, texture, corrTexture, patchLength, 
-                                             overlap, corrTarget, res, y, x, 
+            errors[i, j] += bestGradientOverlapPatch(texture, corrTexture2, patchLength, 
+                                             overlap, corrTarget2, res, y, x, 
                                              alpha, level)
 
     i, j = np.unravel_index(np.argmin(errors), errors.shape)
