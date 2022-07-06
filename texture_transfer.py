@@ -3,7 +3,7 @@ import math
 from matplotlib import pyplot as plt
 from skimage.color import rgb2gray
 from skimage.color.colorconv import gray2rgb, rgba2rgb
-from skimage.filters import gaussian
+from skimage.filters import gaussian,roberts
 from skimage import io, util
 import heapq
 import time
@@ -311,13 +311,14 @@ def Loss_function(original, syn):
   for i in range(height):
       loss3 += np.sqrt(np.sum(np.square(original[i][:,0:3]/np.max(original) - syn[i]/np.max(syn))))
 
-def style_transfer(texture, target):
-    res2 = transferIter(texture, target, 20, 2)
-    return ("Please come back after a few minutes, the image should appear below",res2)
+def style_transfer(texture, target,patchL):
+    res2 = transferIter(texture, target, patchL, 2)
+    res3 = roberts(rgb2gray(target))
+    return (res2,res3)
 
 @jit
-def main():
-    interface = gr.Interface(fn=style_transfer, inputs=['image', 'image'], outputs=["text","image"])
+def main(): 
+    interface = gr.Interface(fn=style_transfer,inputs=['image','image', gr.inputs.Slider(20,50,label="Patch Size (Lower-better quality,longer runtime) (Higher-lower quality,shorter runtime)",step=5)], outputs=["image","image"], article='Image currently processing Please Wait. Limit images from 10 to 500 kb for better results', title='Texture Transfer through Image Quilting')
     interface.launch()
 
 if __name__ == "__main__":
