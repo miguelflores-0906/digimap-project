@@ -239,7 +239,8 @@ def bestCorrOverlapPatch(texture, corrTexture, patchLength, overlap,
     i, j = np.unravel_index(np.argmin(errors), errors.shape)
     return texture[i:i+di, j:j+dj]
 
-
+def NormalizeData(data):
+    return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 @jit
 def transfer(texture, target, patchLength, mode="cut", 
@@ -257,6 +258,9 @@ def transfer(texture, target, patchLength, mode="cut",
 
     sobelX = filters.sobel_h(corrTarget)
     sobelY = filters.sobel_v(corrTarget)
+
+    sobelX = NormalizeData(sobelX)
+    sobelY = NormalizeData(sobelY)
 
     corrTarget = sobelX * sobelY
 
