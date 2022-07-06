@@ -255,8 +255,8 @@ def transfer(texture, target, patchLength, mode="cut",
     # sobelX = np.uint8(np.absolute(sobelX))
     # sobelY = np.uint8(np.absolute(sobelY))
 
-    #sobelX = filters.sobel_h(corrTarget)
-    #sobelY = filters.sobel_v(corrTarget)
+    sobelX = filters.sobel_h(corrTarget)
+    sobelY = filters.sobel_v(corrTarget)
 
     corrTarget = sobelX * sobelY
 
